@@ -1,0 +1,5 @@
+BucketName="my-bucket"
+URL="https://my.custom.cloudfront.domain.net"
+AWSAccessKeyID="MYACCESSKEY"
+AWSSecretKey="mySecretKey"
+AWSRegion="ca-central-1"
