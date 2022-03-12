@@ -81,6 +81,8 @@ type TikTokScraperConfig struct {
 	AWSAccessKeyID string
 	AWSSecretKey   string
 	AWSRegion      string
+	SentryDSN      string
+	Environment    string
 }
 
 func NewScraper(c *TikTokScraperConfig) (*TikTokScraper, error) {

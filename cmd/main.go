@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/BurntSushi/toml"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	tiktokscraper "github.com/threadproc/tiktok-scraper"
@@ -19,6 +21,12 @@ type ttResponse struct {
 }
 
 func errResponse(c *gin.Context, code int, err error) {
+	hub := sentrygin.GetHubFromContext(c)
+
+	if code >= 500 {
+		hub.CaptureException(err)
+	}
+
 	log.WithError(err).Error("error in response")
 	c.JSON(code, &ttResponse{
 		Error: err.Error(),
@@ -70,6 +78,14 @@ func main() {
 		log.WithError(err).Fatal("could not load config file")
 	}
 
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              c.SentryDSN,
+		Environment:      c.Environment,
+		TracesSampleRate: 1.0,
+	}); err != nil {
+		panic(err.Error())
+	}
+
 	var err error
 	tts, err = tiktokscraper.NewScraper(c)
 	if err != nil {
@@ -77,6 +93,10 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	r.Use(sentrygin.New(sentrygin.Options{
+		Repanic: true,
+	}))
 
 	r.GET("/hash/:hash", handleShortURL)
 	r.GET("/video/:username/:videoid", handleVideoRequest)
